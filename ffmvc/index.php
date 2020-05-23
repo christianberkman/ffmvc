@@ -58,20 +58,30 @@ class Ffmvc{
    * Require controller
    */
   private function loadController(){
-    # Check controller name
-    if(!$this->checkControllerString()) self::fatalError('Controller', "Invalid controller string: {$this->request->controllerName}");
-
-    # Controller file
+    // Check if controller file exists
     $this->controllerFile = config::CONTROLLER_DIR ."/". $this->request->controllerName .".php";
-      if(!is_file($this->controllerFile)) self::fatalError('Controller', "Could not find controller file: {$this->controllerFile}");
+    if(!is_file($this->controllerFile)) self::fatalError('Controller', "Could not find controller file: {$this->controllerFile}");
+
+    // Require file, check if class is declared
     require_once $this->controllerFile;
       if(!class_exists('Controller')) self::fatalError('Controller', "Controller class was not declared in {$this->controllerFile}");
     $this->controller = new Controller();
+
+    // Access method
+      if(!method_exists($this->controller, $this->request->methodName)) self::fatalError('Controller', "Controller class did not declare method: {$this->request->methodName}");
+    $methodName = $this->request->methodName;
+    $this->controller->$methodName();
   }
 
   //
-  // Error functions
+  // Other Functions
   //
+
+  /**
+   * Display a fatal error message
+   * @param string $heading Error heading
+   * @param string %message Error message
+   */
   static public function fatalError(string $heading = config::FATAL_ERROR_DEFAULT_HEADING, $message = config::FATAL_ERROR_DEFAULT_MSG){
     ob_clean();
     echo "<h1>Fatal Error</h1>";
@@ -82,19 +92,10 @@ class Ffmvc{
     exit;
   }
 
-  //
-  // Other functions
-  //
   /**
-   * Check if controller string matches regex
-   * @param  string $string controller string
-   * @return bool
+   * Return instance of this class
+   * @return Ffmvc class
    */
-  public function checkControllerString(){
-    $regex = "/^([a-zA-Z][a-zA-z0-9-_.]*)(\/[a-zA-Z][a-zA-z0-9-_.]*)*$/";
-    return preg_match($regex, $this->request->controllerName);
-  }
-
   public static function &get_instance(){
     return self::$instance;
   }
@@ -111,6 +112,7 @@ class Request{
   private $get;
 
   public $controllerName;
+  public $methodName;
 
   /**
    * Constructor
@@ -118,7 +120,13 @@ class Request{
   public function __construct(){
     $this->sanitizeGet();
 
+    // Controller
     $this->controllerName = ($this->get(config::CONTROLLER_ARG) ?? config::DEFAULT_CONTROLLER);
+      if(!preg_match("/^([a-zA-Z][a-zA-z0-9-_.]*)(\/[a-zA-Z][a-zA-z0-9-_.]*)*$/", $this->controllerName)) ffmvc::fatalError("Request", "Controller name is invalid: {$this->controllerName}");
+
+    // Method
+    $this->methodName = ($this->get(config::METHOD_ARG) ?? config::DEFAULT_METHOD);
+      if(!preg_match("/^[a-zA-Z][a-zA-Z_]*$/", $this->methodName)) ffmvc::fatalError('Request', "Method name is invalid: {$this->methodName}");
   }
 
   /**
@@ -156,7 +164,16 @@ class Request{
     else return $_POST;
   }
 
+  /**
+   * Return TRUE if request method is GET
+   * @return boolean
+   */
   public function isGet(){ return ($_SERVER['REQUEST_METHOD'] == "GET"); }
+
+  /**
+   * Return TRUE if request method is POST
+   * @return boolean
+   */
   public function isPost(){ return ($_SERVER['REQUEST_METHOD'] == "POST"); }
 } # request class
 

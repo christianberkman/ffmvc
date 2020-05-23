@@ -26,7 +26,7 @@ class config{
 
   // Default controller and method
   const DEFAULT_CONTROLLER = 'index';
-  const DEFAUTL_METHOD = 'index';
+  const DEFAULT_METHOD = 'index';
 
   // Fatal error
   const FATAL_ERROR_DEFAULT_HEADING = 'Fatal Error';
