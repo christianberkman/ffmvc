@@ -12,7 +12,12 @@ class Controller extends BaseController{
   }
 
   public function index(){
-    echo "This is the index() function in exampleController.php";
+    $data = [
+      'controllerName' => $this->request->controllerName
+      ,'methodName' => $this->request->methodName
+      ,'requestUrl' => $this->request->url
+    ];
+    view('exampleView', $data);
   }
 
   public function second(){

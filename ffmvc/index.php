@@ -30,9 +30,7 @@ class Ffmvc{
   const VERSION = "0.1 alpha";
 
   public $request;
-
   private $controllerName, $controller;
-
   private static $instance;
 
   //
@@ -111,6 +109,7 @@ function &get_ffmvc_instance(){
 class Request{
   private $get;
 
+  public $url;
   public $controllerName;
   public $methodName;
 
@@ -119,6 +118,9 @@ class Request{
    */
   public function __construct(){
     $this->sanitizeGet();
+
+    // URL
+    $this->url = $_SERVER['REQUEST_URI'];
 
     // Controller
     $this->controllerName = ($this->get(config::CONTROLLER_ARG) ?? config::DEFAULT_CONTROLLER);
@@ -191,3 +193,22 @@ class BaseController{
   }
 
 } # class BaseController
+
+/**
+ * Global functions
+ */
+
+function view(string $viewName, array $data = []){
+  # Check if view file exists
+  if(!preg_match("/^([a-zA-Z][a-zA-z0-9-_.]*)(\/[a-zA-Z][a-zA-z0-9-_.]*)*$/", $viewName)) ffmvc::fatalError('View', "View name is invalid: {$viewName}");
+
+  # Check if view file exists
+  $viewFile = config::VIEWS_DIR ."/". $viewName .".php";
+    if(!is_file($viewFile)) ffmvc::fatalError('View', "View file does not exist: {$viewFile}");
+
+  # Set variables from data
+  foreach($data as $key => $value){ $$key = $value; }
+
+  # Require file
+  require_once $viewFile;
+}
