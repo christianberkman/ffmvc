@@ -58,12 +58,11 @@ class Ffmvc{
    * Require controller
    */
   private function loadController(){
-    # Controller name
-    $this->controllerName = ($this->request->get(config::CONTROLLER_ARG) ?? config::DEFAULT_CONTROLLER);
-      if(!$this->checkControllerString()) self::fatalError('Controller', "Invalid controller string: {$this->controllerName}");
+    # Check controller name
+    if(!$this->checkControllerString()) self::fatalError('Controller', "Invalid controller string: {$this->request->controllerName}");
 
     # Controller file
-    $this->controllerFile = config::CONTROLLER_DIR ."/". $this->controllerName .".php";
+    $this->controllerFile = config::CONTROLLER_DIR ."/". $this->request->controllerName .".php";
       if(!is_file($this->controllerFile)) self::fatalError('Controller', "Could not find controller file: {$this->controllerFile}");
     require_once $this->controllerFile;
       if(!class_exists('Controller')) self::fatalError('Controller', "Controller class was not declared in {$this->controllerFile}");
@@ -93,7 +92,7 @@ class Ffmvc{
    */
   public function checkControllerString(){
     $regex = "/^([a-zA-Z][a-zA-z0-9-_.]*)(\/[a-zA-Z][a-zA-z0-9-_.]*)*$/";
-    return preg_match($regex, $this->controllerName);
+    return preg_match($regex, $this->request->controllerName);
   }
 
   public static function &get_instance(){
@@ -109,7 +108,9 @@ function &get_ffmvc_instance(){
  * Request class
  */
 class Request{
-  private $get, $post;
+  private $get;
+
+  public $controllerName;
 
   /**
    * Constructor
@@ -117,6 +118,7 @@ class Request{
   public function __construct(){
     $this->sanitizeGet();
 
+    $this->controllerName = ($this->get(config::CONTROLLER_ARG) ?? config::DEFAULT_CONTROLLER);
   }
 
   /**
@@ -131,7 +133,7 @@ class Request{
    * @param  string $key from $_GET
    * @return string|NULL
    */
-  public function get($key = NULL){
+  public function get(string $key = NULL){
     # Return array if key is NULL
     if($key === NULL) return $this->get;
     # Return NULL if key is not set
@@ -139,6 +141,23 @@ class Request{
     # Return key value
     else return $this->get[$key];
   }
+
+  /**
+   * Return value from $_POST
+   * @param  string $key key from $_POST
+   * @return string|null
+   */
+  public function post($key = NULL){
+    # Return array if key is NULL
+    if($key === NULL) return $_POST;
+    # Return NULL if key is not set
+    if(!isset($_POST[$key])) return NULL;
+    # Return key value
+    else return $_POST;
+  }
+
+  public function isGet(){ return ($_SERVER['REQUEST_METHOD'] == "GET"); }
+  public function isPost(){ return ($_SERVER['REQUEST_METHOD'] == "POST"); }
 } # request class
 
 /**
@@ -150,7 +169,7 @@ class BaseController{
 
   public function __construct(){
     $ffmvc =& get_ffmvc_instance();
-    $this->request = $ffmvc->request;
+      $this->request = $ffmvc->request;
     unset($ffmvc);
   }
 

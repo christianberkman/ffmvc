@@ -9,7 +9,7 @@
 class Controller extends BaseController{
   public function __construct(){
     parent::__construct();
-    echo $this->request->get('c');
+    var_dump($this->request->isGet());
   }
 } # class controller
 
