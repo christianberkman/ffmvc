@@ -29,7 +29,7 @@
 class Ffmvc{
   const VERSION = "0.1 alpha";
 
-  public $request;
+  public $request, $db;
   private $controllerName, $controller;
   private static $instance;
 
@@ -44,12 +44,32 @@ class Ffmvc{
     // Instance
     self::$instance =& $this;
 
-    // Classes
+    // Request, Database
     $this->request = new Request();
+    $this->db_connect();
 
     // Load controller
     $this->loadController();
 
+  }
+
+  /**
+   * Create database connection
+   */
+  private function db_connect(){
+    switch(config::DB_TYPE){
+      case "sqlite3":
+        # Check if database file exists
+        if(!is_file(config::DB_FILE)) self::fatalError('Database', "Database file does not exist: ". config::DB_FILE);
+
+        # Open database
+        $this->db = new SQLite3(config::DB_FILE);
+      break;
+
+      default:
+        $this->db = NULL;
+      break;
+    }
   }
 
   /**
