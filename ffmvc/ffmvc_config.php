@@ -15,17 +15,20 @@ class config{
   // Title of your project
   const TITLE = "ffmvc development";
 
-  // Database type
-  const DB_TYPE = 'sqlite3';
+  // Database type: sqlite3, mysqli or FALSE
+  const DB_TYPE = 'mysqli';
 
-  // Database: sqlite3
+  // Database type: sqlite3
   const DB_FILE = 'database.sqlite';
 
-  // Database: mysql
-  #const DB_SERVER = 'localhost';
-  #const DB_USER = '';
-  #const DB_PASS = '';
-  #const DB_SCEHMA = '';
+  // Database type: mysqli
+  const DB_HOST = 'localhost';
+  const DB_USER = '';
+  const DB_PASS = '';
+  const DB_NAME = '';
+  const DB_PORT = 3306;
+  const DB_SOCKET = '';
+
 
   // Fatal error
   const FATAL_ERROR_DEFAULT_HEADING = 'Fatal Error';

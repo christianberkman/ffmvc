@@ -58,6 +58,8 @@ class Ffmvc{
    */
   private function db_connect(){
     switch(config::DB_TYPE){
+
+      // SQLite3
       case "sqlite3":
         # Check if database file exists
         if(!is_file(config::DB_FILE)) self::fatalError('Database', "Database file does not exist: ". config::DB_FILE);
@@ -66,6 +68,21 @@ class Ffmvc{
         $this->db = new SQLite3(config::DB_FILE);
       break;
 
+      // MySQLi
+      case "mysqli":
+        $this->db = new mysqli(
+          config::DB_HOST,
+          config::DB_USER,
+          config::DB_PASS,
+          config::DB_NAME,
+          config::DB_PORT,
+          config::DB_SOCKET
+        );
+        if($this->db->connect_errno){
+          self::fatalError('Database', "Cannot connect to mysql: (" . $this->db->connect_errno . ") " . $this->db->connect_error);
+        }
+
+      break;
       default:
         $this->db = NULL;
       break;
@@ -207,12 +224,27 @@ class BaseController{
   public $request;
 
   public function __construct(){
+    // Connect to request class
     $ffmvc =& get_ffmvc_instance();
       $this->request = $ffmvc->request;
     unset($ffmvc);
   }
 
 } # class BaseController
+
+/**
+ * Base Model Class
+ */
+class BaseModel{
+  public $db;
+
+  public function __construct(){
+    // Connect to database
+    $ffmvc =& get_ffmvc_instance();
+      $this->db = $ffmvc->db;
+    unset($ffmvc);
+  }
+} # class BaseModel
 
 /**
  * Global functions
@@ -231,4 +263,17 @@ function view(string $viewName, array $data = []){
 
   # Require file
   require_once $viewFile;
+}
+
+function model(string $modelName){
+  # Check if model file exists
+  if(!preg_match("/^([a-zA-Z][a-zA-z0-9-_.]*)(\/[a-zA-Z][a-zA-z0-9-_.]*)*$/", $modelName)) ffmvc::fatalError('Model', "Model name is invalid: {$modelName}");
+
+  # Check if model file exists
+  $modelFile = config::MODELS_DIR ."/". $modelName .".php";
+    if(!is_file($modelFile)) ffmvc::fatalError('Model', "Model file does not exist: {$modelFile}");
+
+  # Require model file
+  require_once $modelFile;
+
 }

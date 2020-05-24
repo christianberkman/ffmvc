@@ -12,6 +12,10 @@ class Controller extends BaseController{
   }
 
   public function index(){
+    // Load Models
+    model("exampleModel");
+    $exampleModel = new exampleModel();
+
     $data = [
       'controllerName' => $this->request->controllerName
       ,'methodName' => $this->request->methodName
